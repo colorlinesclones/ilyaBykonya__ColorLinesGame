@@ -1,5 +1,7 @@
 <RCC>
     <qresource prefix="/">
         <file>QML/Application.qml</file>
+        <file>QML/FinishGameDialog.qml</file>
+        <file>QML/NumberDisplay.qml</file>
     </qresource>
 </RCC>
