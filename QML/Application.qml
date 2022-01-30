@@ -16,14 +16,6 @@ ApplicationWindow {
             anchors.fill: parent
             Row {
                 anchors.fill: parent
-                Text {
-                    height: parent.height
-                    horizontalAlignment: Qt.AlignHCenter
-                    verticalAlignment: Qt.AlignVCenter
-                    width: 100
-                    color: "red"
-                    text: game_model.userScore
-                }
                 ToolButton {
                     onClicked: game_model.endOfMove();
                     text: "Skip move"
@@ -39,9 +31,18 @@ ApplicationWindow {
             }
         }
     }
+    footer: Rectangle {
+        height: 40
+        width: parent.width
+        NumberDisplay {
+            id: score_display
+            anchors.fill: parent
+            number: game_model.userScore
+        }
+    }
 
-    //Делегат системы перемещений. Отвечает за подсветку
-    //выбранного элемента и вызов функции перемещения
+    //Делегат системы перемещений.
+    //Отвечает за вызов функции перемещения
     Item {
         id: move_delegate
         property int firstTarget: -1
@@ -49,7 +50,9 @@ ApplicationWindow {
         function moveTile(targetRow) {
             if(firstTarget === -1) {
                 firstTarget = targetRow;
+                grid_view.itemAtIndex(firstTarget).color = "magenta";
             } else {
+                grid_view.itemAtIndex(firstTarget).color = grid_view.itemAtIndex(firstTarget).tileColor;
                 game_model.moveToEmptyTile(firstTarget, targetRow);
                 firstTarget = -1;
             }
@@ -69,11 +72,7 @@ ApplicationWindow {
 
         model: ColorLinesModel{
             id: game_model
-            onGameFinished:
-            {
-                var value = finallyScore;
-                finish_game_dialog.gameFinished(finallyScore);
-            }
+            onGameFinished: finish_game_dialog.gameFinished(finallyScore);
         }
         delegate: Rectangle {
             readonly property bool tileIsBusy: model.tile_is_busy
@@ -86,7 +85,19 @@ ApplicationWindow {
 
             MouseArea {
                 anchors.fill: parent
-                onClicked: move_delegate.moveTile(model.row)
+                onClicked: move_delegate.moveTile(model.row);
+
+
+                onEntered: { parent.scale = 1.1; opacity: 0.1; }
+                onExited: { parent.scale = 1.0; opacity: 1.0; }
+                hoverEnabled: true
+            }
+
+            Behavior on scale {
+                NumberAnimation { duration: 100 }
+            }
+            Behavior on color {
+                PropertyAnimation { duration: 100 }
             }
 
             NumberAnimation on scale {
@@ -112,6 +123,7 @@ ApplicationWindow {
             }
         }
 
+
         add: Transition {
             NumberAnimation { property: "opacity"; from: 0; to: 1.0; duration: 400 }
             NumberAnimation { property: "scale"; from: 0; to: 1.0; duration: 400 }
@@ -132,24 +144,6 @@ ApplicationWindow {
     }
 
     //Диалоговое окно оконания хода
-    Dialog {
-        modal: true
-        id: finish_game_dialog
-        standardButtons: DialogButtonBox.Ok
-        x: (parent.width - width) / 2
-        y: (parent.height - height) / 2
-
-
-        function gameFinished(finishScore) {
-            text_frame.text = "Result score: " + finishScore
-            finish_game_dialog.visible = true;
-        }
-
-        Text {
-            id: text_frame
-            horizontalAlignment: Qt.AlignHCenter
-            verticalAlignment: Qt.AlignVCenter
-        }
-    }
+    FinishGameDialog{ id: finish_game_dialog }
 }
 
