@@ -3,5 +3,6 @@
         <file>QML/Application.qml</file>
         <file>QML/FinishGameDialog.qml</file>
         <file>QML/NumberDisplay.qml</file>
+        <file>QML/ViewDelegate.qml</file>
     </qresource>
 </RCC>
