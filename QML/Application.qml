@@ -43,22 +43,15 @@ ApplicationWindow {
 
     //Делегат системы перемещений.
     //Отвечает за вызов функции перемещения
-
     Item {
         id: move_delegate
         property int firstTarget: -1
 
         function moveTile(targetRow) {
             if(firstTarget === -1) {
-                if(grid_view.itemAtIndex(targetRow).checkTileIsBusy() === false)
-                    return;
-
                 firstTarget = targetRow;
                 grid_view.itemAtIndex(firstTarget).color = "magenta";
             } else {
-                if(grid_view.itemAtIndex(targetRow).checkTileIsBusy() === true)
-                    return;
-
                 grid_view.itemAtIndex(firstTarget).color = grid_view.itemAtIndex(firstTarget).tileColor;
                 game_model.moveToEmptyTile(firstTarget, targetRow);
                 firstTarget = -1;
@@ -81,7 +74,54 @@ ApplicationWindow {
             id: game_model
             onGameFinished: finish_game_dialog.gameFinished(finallyScore);
         }
-        delegate: ViewDelegate{ }
+        delegate: Rectangle {
+            readonly property bool tileIsBusy: model.tile_is_busy
+            readonly property color tileColor: model.tile_color
+
+            color: tileColor
+            implicitHeight: grid_view.tileSize
+            implicitWidth: grid_view.tileSize
+            radius: grid_view.tileSize / 2
+
+            MouseArea {
+                anchors.fill: parent
+                onClicked: move_delegate.moveTile(model.row);
+
+
+                onEntered: { parent.scale = 1.1; opacity: 0.1; }
+                onExited: { parent.scale = 1.0; opacity: 1.0; }
+                hoverEnabled: true
+            }
+
+            Behavior on scale {
+                NumberAnimation { duration: 100 }
+            }
+            Behavior on color {
+                PropertyAnimation { duration: 100 }
+            }
+
+            NumberAnimation on scale {
+                id: zoom_animation;
+                duration: 400
+                easing.type: Easing.InOutQuad
+                from: 0
+                to: 1.0
+            }
+            NumberAnimation on scale {
+                id: shrink_animation;
+                duration: 400
+                easing.type: Easing.InOutQuad
+                from: 1.0
+                to: 0
+            }
+            onTileIsBusyChanged: {
+                if(tileIsBusy === true) {
+                    zoom_animation.start();
+                } else {
+                    shrink_animation.start();
+                }
+            }
+        }
 
 
         add: Transition {
